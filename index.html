@@ -542,13 +542,66 @@
     </div>
   </div>
   <div class="g-grid" id="g-grid"></div>
-  <div class="card" style="text-align:center;border-style:dashed;">
-    <i class="ti ti-cloud-upload" style="font-size:24px;color:var(--text-light);display:block;margin-bottom:6px;"></i>
-    <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;">Ajouter des médias</div>
-    <div style="font-size:11px;color:var(--text-light);margin-bottom:.75rem;">Réservé aux enseignants modérateurs · JPG, PNG, MP4</div>
-    <div style="display:flex;gap:8px;justify-content:center;">
-      <button class="btn-primary" style="width:auto;padding:.5rem 1rem;margin:0;" onclick="openGForm('photo')"><i class="ti ti-camera"></i>Photo</button>
-      <button class="btn-secondary" style="width:auto;padding:.5rem 1rem;margin:0;border:1px solid var(--gray-border);" onclick="openGForm('video')"><i class="ti ti-video"></i>Vidéo</button>
+  <!-- Moderateur galerie -->
+  <div class="card" style="border-style:dashed;">
+    <div style="text-align:center;">
+      <i class="ti ti-cloud-upload" style="font-size:24px;color:var(--text-light);display:block;margin-bottom:6px;"></i>
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;">Ajouter des médias</div>
+      <div style="font-size:11px;color:var(--text-light);margin-bottom:.75rem;">Réservé aux enseignants modérateurs</div>
+      <button type="button"
+        onclick="document.getElementById('zone-gal-modo').style.display=document.getElementById('zone-gal-modo').style.display==='none'?'block':'none'"
+        style="width:100%;padding:.625rem;border-radius:8px;border:1px dashed #1D9E75;background:#E1F5EE;color:#085041;font-size:12px;font-weight:600;cursor:pointer;">
+        &#128274; Espace modérateur — Ajouter des médias
+      </button>
+    </div>
+    <div id="zone-gal-modo" style="display:none;margin-top:.75rem;">
+      <div id="gal-lbox">
+        <p style="font-size:12px;color:#555;margin-bottom:.5rem;">Mot de passe enseignant :</p>
+        <input type="password" id="gpwd" placeholder="Mot de passe"
+          onkeydown="if(event.key==='Enter')galLogin()"
+          style="width:100%;height:36px;padding:0 .75rem;font-size:13px;border-radius:8px;border:1px solid #ccc;margin-bottom:8px;">
+        <p id="gpwd-err" style="font-size:11px;color:#A32D2D;display:none;margin-bottom:6px;">Mot de passe incorrect.</p>
+        <div style="display:flex;gap:8px;">
+          <button type="button" onclick="galLogin()"
+            style="flex:1;padding:.5rem;border-radius:8px;background:#1D9E75;color:#fff;border:none;font-size:13px;cursor:pointer;">
+            Connexion
+          </button>
+          <button type="button" onclick="document.getElementById('zone-gal-modo').style.display='none'"
+            style="padding:.5rem 1rem;border-radius:8px;border:1px solid #ccc;background:#fff;font-size:13px;cursor:pointer;">
+            Annuler
+          </button>
+        </div>
+      </div>
+      <div id="gal-ebox" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;margin-top:.5rem;">
+          <strong style="font-size:13px;">Ajouter un média</strong>
+          <button type="button" onclick="galLogout()" style="font-size:11px;color:#888;background:none;border:none;cursor:pointer;">Déconnexion</button>
+        </div>
+        <div style="background:#E1F5EE;border-radius:8px;padding:.625rem;margin-bottom:.75rem;font-size:11px;color:#085041;line-height:1.5;">
+          Les médias ajoutés ici sont <strong>sauvegardés définitivement</strong> sur Cloudinary et visibles par tous les visiteurs.
+        </div>
+        <label style="font-size:12px;color:#666;display:block;margin-bottom:3px;">Fichier (photo JPG/PNG ou vidéo MP4) *</label>
+        <input type="file" id="cl-file" accept="image/*,video/*"
+          style="width:100%;font-size:12px;margin-bottom:.625rem;">
+        <label style="font-size:12px;color:#666;display:block;margin-bottom:3px;">Légende *</label>
+        <input type="text" id="cl-cap" maxlength="80" placeholder="Décrivez ce moment…"
+          style="width:100%;height:36px;padding:0 .75rem;font-size:13px;border-radius:8px;border:1px solid #ccc;margin-bottom:.5rem;">
+        <label style="font-size:12px;color:#666;display:block;margin-bottom:3px;">Catégorie</label>
+        <select id="cl-cat" style="width:100%;height:36px;padding:0 .75rem;font-size:13px;border-radius:8px;border:1px solid #ccc;margin-bottom:.75rem;">
+          <option value="site">Sur le site de Gédon</option>
+          <option value="conseil">Conseil de la Terre</option>
+          <option value="action">Action citoyenne</option>
+          <option value="echange">Échange inter-écoles</option>
+        </select>
+        <div id="cl-progress" style="display:none;background:#f5f5f3;border-radius:8px;padding:.625rem;margin-bottom:.625rem;font-size:12px;color:#085041;text-align:center;">
+          ⏳ Envoi en cours…
+        </div>
+        <div id="cl-err" style="display:none;font-size:11px;color:#A32D2D;margin-bottom:6px;"></div>
+        <button type="button" onclick="uploadCloudinary()"
+          style="width:100%;padding:.625rem;border-radius:8px;background:#1D9E75;color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;">
+          ☁️ Envoyer et publier
+        </button>
+      </div>
     </div>
   </div>
   <div id="g-form" style="display:none;" class="card">
@@ -1023,7 +1076,14 @@ function renderGallery() {
       if (m.src) { d.innerHTML = '<img class="g-thumb" src="' + m.src + '" alt="' + m.cap + '" loading="lazy">'; }
       else { d.innerHTML = '<div class="g-thumb-ph"><i class="ti ti-photo"></i></div>'; }
     } else {
-      d.innerHTML = '<div class="g-thumb-ph"><i class="ti ti-player-play"></i>' + (m.dur ? '<span class="g-dur">' + m.dur + '</span>' : '') + '</div>';
+      if (m.thumb) {
+        d.innerHTML = '<div style="position:relative;">'
+          + '<img class="g-thumb" src="' + m.thumb + '" alt="' + m.cap + '" loading="lazy" onerror="this.parentNode.innerHTML='<div class=g-thumb-ph><i class=ti ti-player-play></i></div>'">'
+          + '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.5);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">'
+          + '<i class="ti ti-player-play" style="color:#fff;font-size:16px;"></i></div></div>';
+      } else {
+        d.innerHTML = '<div class="g-thumb-ph"><i class="ti ti-player-play"></i>' + (m.dur ? '<span class="g-dur">' + m.dur + '</span>' : '') + '</div>';
+      }
     }
     d.innerHTML += '<div class="g-info"><span class="tag ' + tc + '">' + GCAT[m.cat] + '</span><div class="g-cap">' + m.cap + '</div><div class="g-met">' + m.date + '</div></div>';
     d.onclick = (function(i){ return function(){ openLB(i); }; })(idx);
@@ -1196,8 +1256,110 @@ function checkEmpty() {
   document.getElementById('modo-empty').style.display = r === 0 ? 'block' : 'none';
 }
 
+/* MODERATEUR GALERIE + CLOUDINARY */
+var CLOUD_NAME = 'dzurzxawi';
+var CLOUD_PRESET = 'gedon_upload';
+
+function galLogin() {
+  var pwd = document.getElementById('gpwd').value;
+  if (pwd === 'gedon2026') {
+    document.getElementById('gal-lbox').style.display = 'none';
+    document.getElementById('gal-ebox').style.display = 'block';
+    document.getElementById('gpwd-err').style.display = 'none';
+    document.getElementById('gpwd').value = '';
+  } else {
+    document.getElementById('gpwd-err').style.display = 'block';
+  }
+}
+function galLogout() {
+  document.getElementById('gal-lbox').style.display = 'block';
+  document.getElementById('gal-ebox').style.display = 'none';
+}
+function uploadCloudinary() {
+  var file = document.getElementById('cl-file').files[0];
+  var cap = document.getElementById('cl-cap').value.trim();
+  var cat = document.getElementById('cl-cat').value;
+  if (!file) { showClErr('Veuillez choisir un fichier.'); return; }
+  if (!cap) { showClErr('Veuillez ajouter une légende.'); return; }
+  var isVideo = file.type.indexOf('video') >= 0 || file.name.match(/\.(mp4|mov|avi|webm|mkv)$/i);
+  var type = isVideo ? 'video' : 'photo';
+  document.getElementById('cl-progress').style.display = 'block';
+  document.getElementById('cl-err').style.display = 'none';
+  var fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUD_PRESET);
+  fd.append('folder', 'gedon');
+  var url = 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/' + (isVideo ? 'video' : 'image') + '/upload';
+  fetch(url, {method:'POST', body:fd})
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      document.getElementById('cl-progress').style.display = 'none';
+      if (data.error) { showClErr('Erreur : ' + data.error.message); return; }
+      var date = new Date().toLocaleDateString('fr-FR', {month:'short', year:'numeric'});
+      var nm = {
+        id: GNID++,
+        type: type,
+        src: data.secure_url,
+        cap: cap,
+        date: date,
+        cat: cat,
+        dur: isVideo ? '▶' : undefined,
+        thumb: isVideo ? data.secure_url.replace('/upload/', '/upload/so_0,w_300,h_225,c_fill/').replace('.mp4', '.jpg') : null
+      };
+      GDATA.unshift(nm);
+      renderGallery();
+      document.getElementById('cl-file').value = '';
+      document.getElementById('cl-cap').value = '';
+      document.getElementById('cl-progress').style.display = 'none';
+      var btn = document.querySelector('#gal-ebox button[onclick="uploadCloudinary()"]');
+      if (btn) {
+        var orig = btn.textContent;
+        btn.textContent = '✓ Publié avec succès !';
+        btn.style.background = '#085041';
+        setTimeout(function(){ btn.textContent = orig; btn.style.background = '#1D9E75'; }, 3000);
+      }
+    })
+    .catch(function(err) {
+      document.getElementById('cl-progress').style.display = 'none';
+      showClErr('Erreur réseau. Vérifiez votre connexion.');
+    });
+}
+function showClErr(msg) {
+  var el = document.getElementById('cl-err');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function loadCloudinaryMedias() {
+  fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/resources/search', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json', 'Authorization': 'Basic ' + btoa('349354316779757:sAieFoem5pbQ5FIlONRxr5bW_GY')},
+    body: JSON.stringify({expression:'folder:gedon', max_results:50, sort_by:[{created_at:'desc'}]})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (!data.resources) return;
+    data.resources.forEach(function(r) {
+      var isVideo = r.resource_type === 'video';
+      var existing = GDATA.find(function(m){ return m.src === r.secure_url; });
+      if (!existing) {
+        GDATA.unshift({
+          id: GNID++,
+          type: isVideo ? 'video' : 'photo',
+          src: r.secure_url,
+          cap: r.context && r.context.custom && r.context.custom.caption ? r.context.custom.caption : r.public_id.split('/').pop(),
+          date: new Date(r.created_at).toLocaleDateString('fr-FR', {month:'short', year:'numeric'}),
+          cat: r.context && r.context.custom && r.context.custom.cat ? r.context.custom.cat : 'site'
+        });
+      }
+    });
+    renderGallery();
+  })
+  .catch(function(){ console.log('Cloudinary non disponible'); });
+}
+
 /* INIT */
 renderGallery();
+loadCloudinaryMedias();
 </script>
 </body>
 </html>
